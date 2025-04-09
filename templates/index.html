@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Notes App</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        :root {
+            --bg: #f4f6f9;
+            --text: #2c3e50;
+            --card-bg: #ffffff;
+            --btn: #3498db;
+            --btn-hover: #2980b9;
+        }
+
+        [data-theme="dark"] {
+            --bg: #1e1e2f;
+            --text: #f4f4f4;
+            --card-bg: #2c2c3f;
+            --btn: #9b59b6;
+            --btn-hover: #8e44ad;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            margin: 0;
+            padding: 0;
+            transition: background 0.3s, color 0.3s;
+        }
+
+        .container {
+            width: 90%;
+            max-width: 800px;
+            margin: 40px auto;
+            background: var(--card-bg);
+            border-radius: 10px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+            padding: 30px;
+        }
+
+        h1, h2 {
+            text-align: center;
+        }
+
+        .toggle-mode {
+            text-align: right;
+            margin-bottom: 20px;
+        }
+
+        .toggle-mode button {
+            background-color: var(--btn);
+            color: white;
+            padding: 8px 14px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+        }
+
+        form {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            margin-bottom: 40px;
+        }
+
+        input[type="text"],
+        textarea,
+        input[type="file"] {
+            padding: 12px;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            font-size: 1em;
+            width: 100%;
+        }
+
+        button {
+            background-color: var(--btn);
+            color: white;
+            padding: 12px;
+            font-size: 1em;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background 0.3s ease;
+        }
+
+        button:hover {
+            background-color: var(--btn-hover);
+        }
+
+        .note {
+            background: var(--bg);
+            border: 1px solid #ccc;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+
+        .note h3 {
+            margin-top: 0;
+        }
+
+        .note-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        .note form {
+            margin: 0;
+        }
+
+        @media (max-width: 600px) {
+            .note-actions {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body data-theme="light">
+    <div class="container">
+        <div class="toggle-mode">
+            <button onclick="toggleTheme()">🌙 Toggle Dark/Light</button>
+        </div>
+
+        <h1>📝 Notes App</h1>
+
+        <form method="POST" action="/add" enctype="multipart/form-data">
+            <input type="text" name="title" placeholder="Note title" required>
+            <textarea name="content" placeholder="Write your note..." rows="4" required></textarea>
+            <input type="file" name="file">
+            <button type="submit">Add Note</button>
+        </form>
+
+        <h2>📋 All Notes</h2>
+        {% for note in notes %}
+            <div class="note">
+                {% if edit_id == note.id %}
+                    <form method="POST" action="/update/{{ note.id }}" enctype="multipart/form-data">
+                        <input type="text" name="title" value="{{ note.title }}" required>
+                        <textarea name="content" rows="3" required>{{ note.content }}</textarea>
+                        <input type="file" name="file">
+                        <button type="submit">💾 Save</button>
+                    </form>
+                {% else %}
+                    <h3>{{ note.title }}</h3>
+                    <p>{{ note.content }}</p>
+                    <small>Created: {{ note.created_at.strftime('%Y-%m-%d %H:%M') }}</small><br>
+                    {% if note.filename %}
+                        <a href="https://{{ blob_account }}.blob.core.windows.net/{{ blob_container }}/{{ note.filename }}" target="_blank">📎 View File</a><br>
+                    {% endif %}
+                    <div class="note-actions">
+                        <form action="/edit/{{ note.id }}" method="GET">
+                            <button type="submit">✏️ Edit</button>
+                        </form>
+                        <form action="/delete/{{ note.id }}" method="POST">
+                            <button type="submit">🗑 Delete</button>
+                        </form>
+                    </div>
+                {% endif %}
+            </div>
+        {% endfor %}
+    </div>
+
+    <script>
+        function toggleTheme() {
+            const current = document.body.getAttribute("data-theme");
+            document.body.setAttribute("data-theme", current === "light" ? "dark" : "light");
+        }
+    </script>
+</body>
+</html>
